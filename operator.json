@@ -3,15 +3,7 @@
   "description": "Exposure Time Scaling",
   "tags": ["pamgene"],
   "authors": ["tercen"],
-  "urls": ["https://github.com/tercen/ETS_operator"],
-  "properties": [
-   {
-      "kind": "BooleanProperty",
-      "name": "multiprocessing",
-      "defaultValue": true,
-      "description": "A logical value indicating if multiprocessing should be used."
-    },
-  ]
+  "urls": ["https://github.com/tercen/ETS_operator"]
 }
 
 
