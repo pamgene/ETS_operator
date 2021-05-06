@@ -1,64 +1,57 @@
 library(tercen)
+library(plyr)
 library(dplyr)
 
-do.ETS <- function(df){
+# linreg for exposure time scaling
+operatorFunction <- function(aFrame){
+  dataX = aFrame$x
+  dataY = aFrame$y
   
-  dataX = df$.x
-  dataY = df$.y
-  
-  nPoints = nrow(df)
-  
-  if (nPoints > 1) {
-    
-    aLm <- try(lm(dataY ~ dataX + 0), silent = TRUE)
-    
+  nPoints = nrow(aFrame)
+  if (nPoints > 1){      
+    aLm <- try(lm(dataY ~ dataX+0), silent = TRUE)
     if(!inherits(aLm, 'try-error')){
-      
-      slope <- aLm$coefficients[[1]]
-      intercept <- 0
-      ssY <- sum((dataY - mean(dataY)) ^ 2)
+      slope = aLm$coefficients[[1]]
+      intercept = 0
+      ssY <- sum((dataY-mean(dataY))^2)
       yFit <- predict(aLm)
-      R2 <- 1 - (sum((dataY - yFit) ^ 2) / ssY)
+      R2 <- 1-(sum((dataY-yFit)^2) / ssY)
       Result = 1;
       
     } else {
-      
       slope = NaN
       intercept = NaN
       R2 = NaN
       Result = 0;
-      
     }
-  }
-  
-  if (nPoints == 1) {
-    
-    slope = dataY / dataX
+  } 
+  if (nPoints == 1){
+    slope = dataY/dataX
     intercept = 0;
     R2 = 1
     Result = 1
-    
   }
-  
-  if (nPoints == 0) {
-    
+  if (nPoints == 0){
     slope = NaN
     intercept = NaN
     R2 = NaN
     Result = 0;
-    
   }
-  
-  return(data.frame(
-    .ri = df$.ri[1],
-    .ci = df$.ci[1],
-    slope = slope,
-    intercept = intercept,
-    R2 = R2,
-    nPoints = nPoints,
-    Result = Result
-  ))
-  
+  return (c(rowSeq = aFrame$rowSeq[1], colSeq = aFrame$colSeq[1], slope=slope, intercept = intercept, R2 = R2, nPoints = nPoints, Result = Result))
+}
+
+calFractionPresent <- function(aFrame){
+  data.frame(aFrame, fractionPresent = sum(aFrame$Result) / length(aFrame$Result))
+}
+
+do.ETS <- function(data) {
+  df <- data.frame(rowSeq = data$.ri,
+                   colSeq = data$.ci, 
+                   x      = data$.x, 
+                   y      = data$.y)
+  result <- ddply(df, ~rowSeq + colSeq, .fun = operatorFunction)
+  ddply(result, ~rowSeq, .fun = calFractionPresent) %>% 
+    select(-c(rowSeq, colSeq))
 }
 
 ctx <- tercenCtx()
