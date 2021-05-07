@@ -1,13 +1,11 @@
 library(tercen)
-library(plyr)
 library(dplyr)
 
-# linreg for exposure time scaling
-operatorFunction <- function(aFrame){
-  dataX = aFrame$x
-  dataY = aFrame$y
+do.ETS <- function(data){
+  dataX = data$.x
+  dataY = data$.y
   
-  nPoints = nrow(aFrame)
+  nPoints = nrow(data)
   if (nPoints > 1){      
     aLm <- try(lm(dataY ~ dataX+0), silent = TRUE)
     if(!inherits(aLm, 'try-error')){
@@ -37,21 +35,11 @@ operatorFunction <- function(aFrame){
     R2 = NaN
     Result = 0;
   }
-  return (c(rowSeq = aFrame$rowSeq[1], colSeq = aFrame$colSeq[1], slope=slope, intercept = intercept, R2 = R2, nPoints = nPoints, Result = Result))
+  data.frame(slope=slope, intercept = intercept, R2 = R2, nPoints = nPoints, Result = Result)
 }
 
-calFractionPresent <- function(aFrame){
-  data.frame(aFrame, fractionPresent = sum(aFrame$Result) / length(aFrame$Result))
-}
-
-do.ETS <- function(data) {
-  df <- data.frame(rowSeq = data$.ri,
-                   colSeq = data$.ci, 
-                   x      = data$.x, 
-                   y      = data$.y)
-  result <- ddply(df, ~rowSeq + colSeq, .fun = operatorFunction)
-  ddply(result, ~rowSeq, .fun = calFractionPresent) %>% 
-    select(-c(rowSeq, colSeq))
+calFractionPresent <- function(data){
+  data.frame(data, fractionPresent = sum(data$Result) / length(data$Result))
 }
 
 ctx <- tercenCtx()
@@ -63,5 +51,8 @@ ctx %>%
   select(.x, .y, .ri, .ci) %>% 
   group_by(.ri, .ci) %>%
   do(do.ETS(.)) %>%
+  ungroup() %>%
+  group_by(.ri, .ci) %>%
+  do(calFractionPresent(.)) %>%
   ctx$addNamespace() %>%
   ctx$save()
