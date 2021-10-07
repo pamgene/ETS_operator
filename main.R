@@ -31,7 +31,7 @@ do.ETS <- function(data){
     slope  <- intercept <- R2 <- yFit <- NaN
     Result <- 0
   }
-  data.frame(slope=slope, intercept = intercept, R2 = R2, nPoints = nPoints, Result = Result, xFit = dataX, yFit = yFit)
+  data.frame(slope=slope, intercept = intercept, R2 = R2, nPoints = as.double(nPoints), Result = Result, xFit = dataX, yFit = yFit)
 }
 
 calFractionPresent <- function(data){

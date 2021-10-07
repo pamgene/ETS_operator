@@ -1,8 +1,8 @@
 library(tercen)
 library(dplyr)
 
-options("tercen.workflowId" = "119e20e1121a1ac50b16db38b0000a3d")
-options("tercen.stepId"     = "c4810b2f-8eae-466f-937a-29438913fb63")
+options("tercen.workflowId" = "282cdc3059e2f028b801fe3bf4005459")
+options("tercen.stepId"     = "a1a1acb5-f7d3-4032-bcae-c1d54ac03f22")
 
 do.ETS <- function(data){
   dataX = data$.x
@@ -34,7 +34,7 @@ do.ETS <- function(data){
     slope  <- intercept <- R2 <- yFit <- NaN
     Result <- 0
   }
-  data.frame(slope=slope, intercept = intercept, R2 = R2, nPoints = nPoints, Result = Result, xFit = dataX, yFit = yFit)
+  data.frame(slope=slope, intercept = intercept, R2 = R2, nPoints = as.double(nPoints), Result = Result, xFit = dataX, yFit = yFit)
 }
 
 calFractionPresent <- function(data){
