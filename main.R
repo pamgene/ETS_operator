@@ -59,6 +59,7 @@ sum.table <- ETS_result %>%
   
 pred.table <- ETS_result %>%
   select(.ri, .ci, xFit, yFit) %>%
+  arrange(.ri, .ci) %>%
   as_tibble() %>%
   ctx$addNamespace()
 
