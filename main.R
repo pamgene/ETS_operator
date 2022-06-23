@@ -1,63 +1,65 @@
 library(tercen)
 library(dplyr)
-
-do.ETS <- function(data){
-  dataX = data$.x
-  dataY = data$.y
-  
-  nPoints = nrow(data)
-  if (nPoints > 1){      
-    aLm <- try(lm(dataY ~ dataX+0), silent = TRUE)
-    if(!inherits(aLm, 'try-error')){
-      slope     <- aLm$coefficients[[1]]
-      intercept <- 0
-      ssY       <- sum((dataY-mean(dataY))^2)
-      yFit      <- predict(aLm)
-      R2        <- 1-(sum((dataY-yFit)^2) / ssY)
-      Result    <- 1
-    } else {
-      slope  <- intercept <- R2 <- yFit <- NaN
-      Result <- 0
-    }
-  } 
-  if (nPoints == 1){
-    slope     <- dataY/dataX
-    intercept <- 0
-    R2        <- 1
-    Result    <- 1
-    yFit      <- dataY
-  }
-  if (nPoints == 0){
-    slope  <- intercept <- R2 <- yFit <- NaN
-    Result <- 0
-  }
-  data.frame(slope=slope, intercept = intercept, R2 = R2, nPoints = as.double(nPoints), Result = Result, xFit = dataX, yFit = yFit)
-}
-
-calFractionPresent <- function(data){
-  data.frame(data, fractionPresent = sum(data$Result) / length(data$Result))
-}
+library(dtplyr)
 
 ctx <- tercenCtx()
 
-if(inherits(try(ctx$select(".x")), 'try-error')) stop("x axis is missing.")
-if(inherits(try(ctx$select(".y")), 'try-error')) stop("y axis is missing.")
+if(!ctx$hasXAxis) stop("x axis is missing.")
 
-ETS_result <- ctx %>% 
+dt_in <- ctx %>% 
   select(.x, .y, .ri, .ci) %>%
-  group_by(.ri, .ci) %>%
-  do(do.ETS(.)) 
+  data.table::as.data.table()
+
+ETS_result <- dt_in[, 
+          {
+            x = .x
+            y = .y
+            
+            nPoints = length(x)
+            if (nPoints > 1) {
+              slope     <- sum(x*y) / sum(x^2)
+              intercept <- 0
+              ssY       <- sum((y-mean(y))^2)
+              yFit      <- x * slope
+              R2        <- 1-(sum((y-yFit)^2) / ssY)
+              Result    <- 1
+              
+            } 
+            if (nPoints == 1) {
+              slope     <- y/x
+              intercept <- 0
+              R2        <- 1
+              Result    <- 1
+              yFit      <- y
+            }
+            if (nPoints == 0) {
+              slope  <- intercept <- R2 <- yFit <- NaN
+              Result <- 0
+            }
+            list(
+              slope = slope,
+              intercept = intercept,
+              R2 = R2,
+              nPoints = as.double(nPoints),
+              Result = Result,
+              xFit = x,
+              yFit = yFit
+            )
+          }, by=c(".ri", ".ci")
+]
 
 sum.table <- ETS_result %>%
   select(-c(xFit, yFit)) %>%
   unique() %>% 
   ungroup() %>%
   group_by(.ri, .ci) %>%
-  do(calFractionPresent(.)) %>%
+  mutate(fractionPresent = mean(Result)) %>%
+  as_tibble() %>%
   ctx$addNamespace() 
-
+  
 pred.table <- ETS_result %>%
   select(.ri, .ci, xFit, yFit) %>%
+  as_tibble() %>%
   ctx$addNamespace()
 
 ctx$save(list(sum.table, pred.table))
