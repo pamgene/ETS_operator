@@ -3,7 +3,7 @@
   "name": "test",
   "namespace": "ds0",
   "inputDataUri": "groups_series_measurement2_exp.tsv",
-  "outputDataUri": ["table1.csv","table2.csv","table3.csv","table4.csv","table5.csv","table6.csv"],
+  "outputDataUri": ["table1.csv","table2.csv","table3.csv","table4.csv"],
   "columns": ["Group"],
   "rows": ["Variable"],
   "colors": [],
