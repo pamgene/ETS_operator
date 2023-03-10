@@ -3,7 +3,5 @@
   "description": "Exposure Time Scaling",
   "tags": ["pamgene"],
   "authors": ["tercen"],
-  "urls": ["https://github.com/tercen/ETS_operator"]
+  "urls": ["https://github.com/pamgene/ETS_operator"]
 }
-
-
